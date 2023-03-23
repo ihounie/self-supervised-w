@@ -15,7 +15,7 @@ def get_cfg():
     parser.add_argument(
         "--wandb",
         type=str,
-        default="self_supervised",
+        default="ssl_whiten",
         help="name of the project for logging at https://wandb.ai",
     )
     parser.add_argument(
@@ -149,4 +149,34 @@ def get_cfg():
         "--eval_head", action="store_true", help="eval head output instead of model",
     )
     parser.add_argument("--imagenet_path", type=str, default="~/IN100/")
+    #####################
+    #       MAX-ENT
+    #####################
+
+    parser.add_argument(
+        "--dual_init",
+        type=float,
+        default=0.1,
+        help="Dual variable initialization",
+    )
+    parser.add_argument(
+        "--dual_lr",
+        type=float,
+        default=0.2,
+        help="Dual Learning Rate",
+    )
+    parser.add_argument(
+        "--epsilon",
+        type=float,
+        default=0.2,
+        help="Invariance Constraint Level",
+    )
+    parser.add_argument(
+        "--entropy_k",
+        type=int,
+        default=12,
+        help="k in Kozachenko-Leonenko kNN based Entropy estimator.",
+    )
+
+
     return parser.parse_args()

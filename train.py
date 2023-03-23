@@ -54,13 +54,30 @@ if __name__ == "__main__":
                 lr_warmup += 1
 
             optimizer.zero_grad()
-            loss = model(samples)
+            if cfg.method=="maxent":
+                loss, entropy, align = model(samples)
+            else:
+                loss = model(samples)
             loss.backward()
             optimizer.step()
             loss_ep.append(loss.item())
             model.step(ep / cfg.epoch)
             if cfg.lr_step == "cos" and lr_warmup >= 500:
                 scheduler.step(ep + n_iter / iters)
+            if n_iter%10:
+                if cfg.method=="maxent":
+                    wandb.log({"train/loss": loss.item(), "train/align": align, "train/entropy": entropy, "train/dual":model.dual_var})
+        ##################
+        #   DUAL UPDATE
+        ##################
+        if cfg.method=="maxent":
+            model.eval()
+            with torch.no_grad():
+                for n_iter, (samples, _) in enumerate(tqdm(ds.train, position=1)):
+                    _, _, align = model(samples)
+                    model.update_slack(align)
+                model.update_dual()
+            model.train()
 
         if cfg.lr_step == "step":
             scheduler.step()
@@ -71,9 +88,10 @@ if __name__ == "__main__":
         if (ep + 1) % eval_every == 0:
             acc_knn, acc = model.get_acc(ds.clf, ds.test)
             wandb.log({"acc": acc[1], "acc_5": acc[5], "acc_knn": acc_knn}, commit=False)
-
         if (ep + 1) % 100 == 0:
             fname = f"data/{cfg.method}_{cfg.dataset}_{ep}.pt"
             torch.save(model.state_dict(), fname)
 
         wandb.log({"loss": np.mean(loss_ep), "ep": ep})
+        if cfg.method=="maxent":
+            wandb.log({"dual_var": model.dual_var})

@@ -1,9 +1,10 @@
 from .contrastive import Contrastive
 from .w_mse import WMSE
 from .byol import BYOL
+from .maxent import MaxEnt
 
 
-METHOD_LIST = ["contrastive", "w_mse", "byol"]
+METHOD_LIST = ["contrastive", "w_mse", "byol", "maxent"]
 
 
 def get_method(name):
@@ -14,3 +15,5 @@ def get_method(name):
         return WMSE
     elif name == "byol":
         return BYOL
+    elif name == "maxent":
+        return MaxEnt
